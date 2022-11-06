@@ -276,6 +276,7 @@ class ConstantProductAMM(Application):
                     ),
                     # This is the first time we've been called
                     # we use a different formula to mint tokens
+                    # (Jack) Uniswap equivalent is the createPool function in Factory contract
                     self.tokens_to_mint_initial(
                         a_xfer.get().asset_amount(), b_xfer.get().asset_amount()
                     ),
@@ -486,6 +487,20 @@ class ConstantProductAMM(Application):
     #   it does so in favor of the contract. This is a subtle security issue that,
     #   if mishandled, could cause the balance of the contract to be drained.
 
+    # (Jack) tokens_to_mint:
+    #   issued = total supply - pool_bal.value()
+    #   a_supply = a_bal.value() - a_xfer asset amount (xfer refers to an asset transfer transaction)
+    #   b_supply = b_bal.value() - b_xfer asset amount
+    #   a_amount = a_xfer asset amount 
+    #   b_amount = b_xfer asset amount
+    #   a_rat = a_amount * scale / a_supply
+    #   b_rat = b_amount * scale / b_supply
+    #   WideRatio = a_rat or b_rat * issued / scale
+    #      WideRatio example: (((a_amount * scale) / a_supply) * issued) / scale
+    #      ((10 * scale) / 100) * 1000)) / scale
+    # = (10 * 1000 / 100) * 1000 (issued amnt)) / scale
+    # = 100 * 1000 / 1000
+    # = 100
     @internal(TealType.uint64)
     def tokens_to_mint(self, issued, a_supply, b_supply, a_amount, b_amount):
         return Seq(
